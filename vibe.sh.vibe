@@ -1,0 +1,92 @@
+# vibe.sh
+
+## Usage
+$ vibe.sh [source] --prompt 'additional prompt' --system 'overriding system prompt' --model 'modelname'
+
+  [source] (Required) A source file
+  [target] (Optional) A filename
+  [prompt] (Optional) The prompt to use
+  --prompt (Optional) An additional prompt to use
+  --system (Optional) A system prompt to use
+  --model  (Optional) A model name to pass into the hey.sh script
+
+### Behavior
+
+This takes a source file, sends it to an LLM, and saves the response in a file with the following format:
+
+  filename.[extension].vibe
+
+It takes the response and creates or overwrites:
+  
+  filename.[extension]
+
+It also clones that file with a versioning system:
+
+  filename.[version].[extension]
+
+If filename.[version].[extension] does not exist then it is named filename.1.[extension]
+
+If it does exist, it gets created into
+
+  filename.[n+1].[extension]
+
+Where n is the highest current version
+
+### Why
+
+The goal is to make pure vibe coding easier in the terminal, so that changes between versions can be easily compared, rolled back, or even contextualized so that the model can understand _how_ a project is evolving, helping align the model with your vision overtime
+
+It creates to files, one with just the extension, and one that has a version number so that the one without the version number represents the live version
+
+### How to generate the file
+
+I've already created 2 other scripts: context and hey
+
+`context` wraps a file with metadata that can help the LLM
+`hey` is already configured to send and output the response. It also accepts --prompt and --model etc
+
+Do the following with the users input:
+
+  context [sourcefile] | hey --prompt [prompt] --system [system] --model [model] > [target.version.file]
+
+### Versioning the sourcefile
+
+In addition to creating a versioned file, version the source file too. The source file should go from
+
+  [source].vibe
+
+to
+
+  [source.[n+1].vibe
+
+Where n is the same n used for the target file (so that the version match)
+
+No changes to the source should be made. The effect is that anytime I make changes and rerun the vibe command a new set of versioned prompt + file pairs should be made
+
+
+### Defaults
+[system] The default value should be something like:
+
+  Take the attached file and generate code or content for it. Do not escape anything, as your response will be output directly into a file. Use the context filename to guide you in creating the file. For code files, do not escape.
+
+### Examples
+
+  vibe index.html.vibe
+  # The above generates the following files
+    index.html
+    index.1.html
+    index.html.1.vibe
+
+  vibe.index.html.vibe
+  # The second time it's run
+    index.html # overwritten
+    index.2.html
+    index.html.2.vibe
+
+  vibe index.html.vibe
+  # Each time it just increases
+    index.html # overwritten
+    idnex.3.html
+    index.html.3.vibe
+
+
