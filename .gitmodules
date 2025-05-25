@@ -1,0 +1,3 @@
+[submodule "hey"]
+	path = hey
+	url = https://github.com/qrxworld/hey
