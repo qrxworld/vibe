@@ -12,7 +12,7 @@ $ vibe.sh [source] --prompt 'additional prompt' --system 'overriding system prom
 
 ### Behavior
 
-This takes a source file, sends it to an LLM, and saves the response in a file with the following format:
+This takes a source file combined with any piped content, sends it to an LLM, and saves the response in a file with the following format:
 
   filename.[extension].vibe
 
@@ -89,4 +89,5 @@ No changes to the source should be made. The effect is that anytime I make chang
     idnex.3.html
     index.html.3.vibe
 
-
+  cat requirements.txt | vibe index.html.vibe
+  # You can also pipe context in

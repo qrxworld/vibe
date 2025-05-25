@@ -3,6 +3,12 @@
 # vibe.sh: Script to send a source file to an LLM, save the response,
 # and manage versioning for both output and source files.
 
+# Check for piped content
+piped_content=""
+if [[ ! -t 0 ]]; then
+    piped_content=$(cat)
+fi
+
 # --- Configuration ---
 DEFAULT_SYSTEM_PROMPT="You are an expert programmer and content writer.
 Your task is to process the provided file content and generate new code or content.
@@ -180,14 +186,22 @@ if ! command -v hey &> /dev/null; then
 fi
 
 # The core command
-if context "$source_file" | hey "${hey_args[@]}" > "$versioned_output_file"; then
-    echo "LLM response saved to '$versioned_output_file'."
+if [[ -n "$piped_content" ]]; then
+    if { echo "$piped_content"; context "$source_file"; } | hey "${hey_args[@]}" > "$versioned_output_file"; then
+        echo "LLM response saved to '$versioned_output_file'."
+    else
+        echo "Error: Command failed." >&2
+        echo "Partial output might be in '$versioned_output_file'." >&2
+        exit 1
+    fi
 else
-    echo "Error: Command 'context \"$source_file\" | hey ${hey_args[*]}' failed." >&2
-    echo "Partial output might be in '$versioned_output_file'." >&2
-    # Decide if you want to exit or continue to copy potentially empty/error file
-    # For now, let's exit to prevent further operations on a failed generation
-    exit 1
+    if context "$source_file" | hey "${hey_args[@]}" > "$versioned_output_file"; then
+        echo "LLM response saved to '$versioned_output_file'."
+    else
+        echo "Error: Command 'context \"$source_file\" | hey ${hey_args[*]}' failed." >&2
+        echo "Partial output might be in '$versioned_output_file'." >&2
+        exit 1
+    fi
 fi
 
 # --- Create/Overwrite Live File ---
